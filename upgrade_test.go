@@ -22,13 +22,9 @@ func (d *testDriver) Upgrade(v Version) error {
 
 func TestValidVersions(t *testing.T) {
   
-  u, err := New(Config{Resources:"./test/versions/001"})
-  if !assert.Nil(t, err, fmt.Sprintf("%v", err)) {
-    return
-  }
-  if !assert.Len(t, u.versions, 3) {
-    return
-  }
+  u, err := New(Config{Resources:"./test/versions/001", Driver:&testDriver{0}})
+  if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
+  if !assert.Len(t, u.versions, 3) { return }
   
   assert.Equal(t, 1, u.versions[0].Version)
   assert.Equal(t, []byte("1. Up"), u.versions[0].Upgrade)

@@ -1,11 +1,11 @@
 
 export GOPATH := $(GOPATH):$(PWD)
 
-.PHONY: all deps test
+TEST_PKGS := . ./driver/postgres
+
+.PHONY: all test
 
 all: test
 
-deps:
-
 test:
-	go test -test.v
+	go test -test.v $(TEST_PKGS)
