@@ -163,3 +163,27 @@ func createDatabase(u, n string) error {
   
   return nil
 }
+
+/**
+ * Drop a database, for debugging
+ */
+func dropDatabase(u, n string) error {
+  
+  db, err := sql.Open("postgres", u)
+  if err != nil {
+    return err
+  }
+  
+  defer db.Close()
+  err = db.Ping()
+  if err != nil {
+    return err
+  }
+  
+  _, err = db.Exec(fmt.Sprintf(`DROP DATABASE IF EXISTS "%s"`, n))
+  if err != nil {
+    return err
+  }
+  
+  return nil
+}
