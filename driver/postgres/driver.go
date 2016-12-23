@@ -59,7 +59,7 @@ func (d *Driver) Version() (int, error) {
  */
 func (d *Driver) Upgrade(v upgrade.Version) error {
   fmt.Println("postgres: -> version", v.Version)
-  return d.execVersionScript(versionTable, string(v.Upgrade), v.Version)
+  return d.execVersionScript(versionTable, string(v.Upgrade), v.Version, upgrade.Upgrade)
 }
 
 /**
@@ -90,7 +90,7 @@ func (d *Driver) databaseVersion(t string) (int, error) {
 /**
  * Execute an upgrade
  */
-func (d *Driver) execVersionScript(t, s string, v int) error {
+func (d *Driver) execVersionScript(t, s string, v int, dir upgrade.Direction) error {
   
   tx, err := d.Begin()
   if err != nil {
@@ -117,9 +117,16 @@ func (d *Driver) execVersionScript(t, s string, v int) error {
     }
   }
   
-  _, err = tx.Exec(fmt.Sprintf("INSERT INTO %s (version) VALUES ($1)", t), v)
-  if err != nil {
-    return err
+  if dir == upgrade.Upgrade {
+    _, err = tx.Exec(fmt.Sprintf("INSERT INTO %s (version) VALUES ($1)", t), v)
+    if err != nil {
+      return err
+    }
+  }else if dir == upgrade.Downgrade {
+    _, err = tx.Exec(fmt.Sprintf("DELETE FROM %s WHERE version = $1", t), v)
+    if err != nil {
+      return err
+    }
   }
   
   err = tx.Commit()

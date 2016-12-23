@@ -15,6 +15,12 @@ const (
   rollback  = "down"
 )
 
+type Direction int
+const (
+  Upgrade   = Direction(iota)
+  Downgrade = Direction(iota)
+)
+
 /**
  * An upgrade version
  */

@@ -20,8 +20,10 @@ const (
 func TestUpgrade(t *testing.T) {
   
   t.Run("a", func(t *testing.T) {
+    var err error
+    var n int
     
-    err := createDatabase(testURL, testDatabase)
+    err = createDatabase(testURL, testDatabase)
     if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
     
     d, err := New(fmt.Sprintf("postgres://postgres@localhost:5432/%s?sslmode=disable", testDatabase))
@@ -31,7 +33,11 @@ func TestUpgrade(t *testing.T) {
     u, err := upgrade.New(upgrade.Config{Resources:path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "postgres/001"), Driver:d})
     if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
     
-    n, err := u.Upgrade()
+    n, err = u.Upgrade()
+    if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
+    assert.Equal(t, 2, n)
+    
+    n, err = d.Version()
     if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
     assert.Equal(t, 2, n)
     
@@ -39,6 +45,10 @@ func TestUpgrade(t *testing.T) {
     if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
     
     n, err = u.Upgrade()
+    if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
+    assert.Equal(t, 3, n)
+    
+    n, err = d.Version()
     if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
     assert.Equal(t, 3, n)
     
