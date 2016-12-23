@@ -2,8 +2,11 @@ package postgres
 
 import (
   "fmt"
-  "../.."
   "database/sql"
+)
+
+import (
+  "../.."
 )
 
 import (

@@ -5,8 +5,11 @@ import (
   "fmt"
   "path"
   "testing"
-  "../.."
   "github.com/stretchr/testify/assert"
+)
+
+import (
+  "../.."
 )
 
 const testDatabase = "go_upgrade_tests"
@@ -26,12 +29,11 @@ func TestUpgrade(t *testing.T) {
   if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
   assert.Equal(t, 2, n)
   
-  n, err = u.Upgrade()
+  u, err = upgrade.New(upgrade.Config{Resources:path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "postgres/002"), Driver:d})
   if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
-  assert.Equal(t, 4, n)
   
   n, err = u.Upgrade()
   if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
-  assert.Equal(t, 4, n)
+  assert.Equal(t, 3, n)
   
 }
