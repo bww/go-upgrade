@@ -1,7 +1,9 @@
 package postgres
 
 import (
+  "os"
   "fmt"
+  "path"
   "testing"
   "../.."
   "github.com/stretchr/testify/assert"
@@ -17,7 +19,7 @@ func TestUpgrade(t *testing.T) {
   d, err := New(fmt.Sprintf("postgres://postgres@localhost:5432/%s?sslmode=disable", testDatabase))
   if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
   
-  u, err := upgrade.New(upgrade.Config{Resources:"./test/postgres/001", Driver:d})
+  u, err := upgrade.New(upgrade.Config{Resources:path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "postgres/001"), Driver:d})
   if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
   
   n, err := u.Upgrade()
