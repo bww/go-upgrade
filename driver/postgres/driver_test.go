@@ -9,7 +9,7 @@ import (
 )
 
 import (
-  "../.."
+  "github.com/bww/go-upgrade"
 )
 
 const (

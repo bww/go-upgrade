@@ -6,7 +6,7 @@ import (
 )
 
 import (
-  "../.."
+  "github.com/bww/go-upgrade"
 )
 
 import (
@@ -40,6 +40,20 @@ func New(u string) (*Driver, error) {
   d := &Driver{db}
   
   err = d.createVersionTableIfNecessary(versionTable)
+  if err != nil {
+    return nil, err
+  }
+  
+  return d, nil
+}
+
+/**
+ * Create a new postgres driver using the provided connection
+ */
+func NewWithDB(db *sql.DB) (*Driver, error) {
+  d := &Driver{db}
+  
+  err := d.createVersionTableIfNecessary(versionTable)
   if err != nil {
     return nil, err
   }
