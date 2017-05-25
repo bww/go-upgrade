@@ -68,6 +68,9 @@ func versionsFromResourcesAtPath(p string) ([]*Version, error) {
   
   for _, e := range infos {
     n := e.Name()
+    if len(n) > 0 && n[0] == '.' {
+      continue // skip dot files
+    }
     
     x := strings.IndexAny(n, "_-")
     if x < 0 {
