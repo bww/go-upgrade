@@ -1,7 +1,9 @@
 package upgrade
 
 import (
+  "os"
   "fmt"
+  "path"
   "testing"
   "github.com/stretchr/testify/assert"
 )
@@ -22,13 +24,9 @@ func (d *testDriver) Upgrade(v Version) error {
 
 func TestValidVersions(t *testing.T) {
   
-  u, err := New(Config{Resources:"./test/versions/001"})
-  if !assert.Nil(t, err, fmt.Sprintf("%v", err)) {
-    return
-  }
-  if !assert.Len(t, u.versions, 3) {
-    return
-  }
+  u, err := New(Config{Resources:path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "versions/001"), Driver:&testDriver{0}})
+  if !assert.Nil(t, err, fmt.Sprintf("%v", err)) { return }
+  if !assert.Len(t, u.versions, 3) { return }
   
   assert.Equal(t, 1, u.versions[0].Version)
   assert.Equal(t, []byte("1. Up"), u.versions[0].Upgrade)
@@ -47,7 +45,7 @@ func TestValidVersions(t *testing.T) {
 
 func TestMalformedVersions(t *testing.T) {
   
-  _, err := New(Config{Resources:"./test/versions/002"})
+  _, err := New(Config{Resources:path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "versions/002")})
   if !assert.NotNil(t, err, fmt.Sprintf("%v", err)) {
     return
   }
@@ -56,7 +54,7 @@ func TestMalformedVersions(t *testing.T) {
 
 func TestUpgrade(t *testing.T) {
   
-  u, err := New(Config{Resources:"./test/versions/001", Driver:&testDriver{0}})
+  u, err := New(Config{Resources:path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "versions/001"), Driver:&testDriver{0}})
   if !assert.Nil(t, err, fmt.Sprintf("%v", err)) {
     return
   }

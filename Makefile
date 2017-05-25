@@ -1,11 +1,14 @@
 
-export GOPATH := $(GOPATH):$(PWD)
+export VENDOR := $(shell cd ../../../.. && pwd)
+export GOPATH := $(GOPATH):$(VENDOR)
 
-.PHONY: all deps test
+TEST_PKGS := github.com/bww/go-upgrade github.com/bww/go-upgrade/driver/postgres
+
+.PHONY: all test
 
 all: test
 
-deps:
-
+test: export GO_UPGRADE_TEST_RESOURCES := $(PWD)/test
 test:
-	go test -test.v
+	@echo $(VENDOR)
+	go test -test.v $(TEST_PKGS)
