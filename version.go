@@ -7,6 +7,7 @@ import (
   "sort"
   "strings"
   "strconv"
+  "unicode"
   "io/ioutil"
 )
 
@@ -68,8 +69,13 @@ func versionsFromResourcesAtPath(p string) ([]*Version, error) {
   
   for _, e := range infos {
     n := e.Name()
-    if len(n) > 0 && n[0] == '.' {
-      continue // skip dot files
+    if len(n) > 0 {
+      if n[0] == '.' {
+        continue // skip dot files
+      }
+      if !unicode.IsDigit(n[0]) {
+        continue // skip files that don't begin with a digit
+      }
     }
     
     x := strings.IndexAny(n, "_-")

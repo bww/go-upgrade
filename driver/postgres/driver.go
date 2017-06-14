@@ -72,7 +72,7 @@ func (d *Driver) Version() (int, error) {
  * Execute an upgrade to the provided version
  */
 func (d *Driver) Upgrade(v upgrade.Version) error {
-  fmt.Println("postgres: -> version", v.Version)
+  fmt.Println("-----> postgres -> version", v.Version)
   return d.execVersionScript(versionTable, string(v.Upgrade), v.Version, upgrade.Upgrade)
 }
 
