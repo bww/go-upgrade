@@ -73,7 +73,7 @@ func versionsFromResourcesAtPath(p string) ([]*Version, error) {
       if n[0] == '.' {
         continue // skip dot files
       }
-      if !unicode.IsDigit(n[0]) {
+      if !unicode.IsDigit(rune(n[0])) {
         continue // skip files that don't begin with a digit
       }
     }
