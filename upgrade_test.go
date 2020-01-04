@@ -17,7 +17,7 @@ func (d *testDriver) Version() (int, error) {
 }
 
 func (d *testDriver) Upgrade(v Version) error {
-	fmt.Println("---> Upgrade to version", v)
+	fmt.Println("----> Upgrade to version", v)
 	d.version = v.Version
 	return nil
 }
