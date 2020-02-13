@@ -2,14 +2,13 @@ package postgres
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
 	"testing"
-)
 
-import (
 	"github.com/bww/go-upgrade"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (

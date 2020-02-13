@@ -19,22 +19,16 @@ const (
 type Direction int
 
 const (
-	Upgrade   = Direction(iota)
-	Downgrade = Direction(iota)
+	Upgrade Direction = iota
+	Downgrade
 )
 
-/**
- * An upgrade version
- */
 type Version struct {
 	Version  int
 	Upgrade  []byte
 	Rollback []byte
 }
 
-/**
- * Sort by version
- */
 type byVersion []*Version
 
 func (s byVersion) Len() int {
@@ -49,12 +43,9 @@ func (s byVersion) Less(i, j int) bool {
 	return s[i].Version < s[j].Version
 }
 
-/**
- * Load upgrade resources from a directory. An upgrade resource has
- * a filename of the following form:
- *
- *  <version>_<up|down>[_<optional_description>]
- */
+// Load upgrade resources from a directory. An upgrade resource has
+// a filename of the following form:
+//  <version>_<up|down>[_<optional_description>]
 func versionsFromResourcesAtPath(p string) ([]*Version, error) {
 	versions := make(map[int]*Version)
 

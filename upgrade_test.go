@@ -2,10 +2,11 @@ package upgrade
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type testDriver struct {
