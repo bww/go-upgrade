@@ -18,13 +18,11 @@ func (d *testDriver) Version() (int, error) {
 }
 
 func (d *testDriver) Upgrade(v Version) error {
-	fmt.Println("----> Upgrade to version", v)
 	d.version = v.Version
 	return nil
 }
 
 func TestValidVersions(t *testing.T) {
-
 	u, err := New(Config{Resources: path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "versions/001"), Driver: &testDriver{0}})
 	if !assert.Nil(t, err, fmt.Sprintf("%v", err)) {
 		return
@@ -49,37 +47,31 @@ func TestValidVersions(t *testing.T) {
 }
 
 func TestMalformedVersions(t *testing.T) {
-
 	_, err := New(Config{Resources: path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "versions/002")})
 	if !assert.NotNil(t, err, fmt.Sprintf("%v", err)) {
 		return
 	}
-
 }
 
 func TestUpgrade(t *testing.T) {
-
 	u, err := New(Config{Resources: path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "versions/001"), Driver: &testDriver{0}})
-	if !assert.Nil(t, err, fmt.Sprintf("%v", err)) {
-		return
+	assert.Nil(t, err, fmt.Sprint(err))
+
+	r, err := u.UpgradeToVersion(2)
+	if assert.Nil(t, err, fmt.Sprint(err)) {
+		fmt.Println("-->", r)
+		assert.Equal(t, 2, r.After)
 	}
 
-	n, err := u.UpgradeToVersion(2)
-	if !assert.Nil(t, err, fmt.Sprintf("%v", err)) {
-		return
+	r, err = u.Upgrade()
+	if assert.Nil(t, err, fmt.Sprint(err)) {
+		fmt.Println("-->", r)
+		assert.Equal(t, 4, r.After)
 	}
-	assert.Equal(t, 2, n)
 
-	n, err = u.Upgrade()
-	if !assert.Nil(t, err, fmt.Sprintf("%v", err)) {
-		return
+	r, err = u.Upgrade()
+	if assert.Nil(t, err, fmt.Sprint(err)) {
+		fmt.Println("-->", r)
+		assert.Equal(t, 4, r.After)
 	}
-	assert.Equal(t, 4, n)
-
-	n, err = u.Upgrade()
-	if !assert.Nil(t, err, fmt.Sprintf("%v", err)) {
-		return
-	}
-	assert.Equal(t, 4, n)
-
 }

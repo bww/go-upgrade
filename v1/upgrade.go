@@ -1,8 +1,40 @@
 package upgrade
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 )
+
+var (
+	ErrNoVersions = errors.New("No versions")
+	ErrNoDriver   = errors.New("No driver")
+	ErrNoChange   = errors.New("No change")
+)
+
+type Results struct {
+	Before, After, Target int
+	Applied               []int
+}
+
+func (r Results) String() string {
+	b := &strings.Builder{}
+	b.WriteString(fmt.Sprintf("Upgrading to %d (%d → %d) applied ", r.Target, r.Before, r.After))
+	if len(r.Applied) > 0 {
+		b.WriteString("[")
+		for i, e := range r.Applied {
+			if i > 0 {
+				b.WriteString(", ")
+			}
+			b.WriteString(strconv.FormatInt(int64(e), 10))
+		}
+		b.WriteString("]")
+	} else {
+		b.WriteString("none")
+	}
+	return b.String()
+}
 
 type Config struct {
 	Resources string
@@ -27,13 +59,13 @@ func New(conf Config) (*Upgrader, error) {
 		return nil, err
 	}
 	if conf.Driver == nil {
-		return nil, fmt.Errorf("Driver is nil")
+		return nil, ErrNoDriver
 	}
 	return &Upgrader{v, conf.Driver}, nil
 }
 
 // Upgrade to the latest version
-func (u *Upgrader) Upgrade() (int, error) {
+func (u *Upgrader) Upgrade() (Results, error) {
 	return u.UpgradeToVersion(-1)
 }
 
@@ -43,25 +75,27 @@ func (u *Upgrader) Upgrade() (int, error) {
 //
 // Specifically, if versions {1, 2, 5} are defined and version 4 is requested,
 // upgrades will be performed for versions {1, 2}.
-func (u *Upgrader) UpgradeToVersion(v int) (int, error) {
+func (u *Upgrader) UpgradeToVersion(v int) (Results, error) {
 	if len(u.versions) < 1 {
-		return -1, fmt.Errorf("No versions")
+		return Results{}, ErrNoVersions
 	}
 
-	c, err := u.driver.Version()
+	before, err := u.driver.Version()
 	if err != nil {
-		return -1, err
+		return Results{}, err
 	}
 
 	if v < 0 {
 		v = u.versions[len(u.versions)-1].Version
 	}
-	if c >= v {
-		return c, nil
+	if before >= v {
+		return Results{Before: before, After: before, Target: v}, nil
 	}
 
+	after := before
+	var applied []int
 	for _, e := range u.versions {
-		if e.Version <= c {
+		if e.Version <= after {
 			continue
 		} else if e.Version > v {
 			break
@@ -69,11 +103,12 @@ func (u *Upgrader) UpgradeToVersion(v int) (int, error) {
 
 		err = u.driver.Upgrade(*e)
 		if err != nil {
-			return c, err
+			return Results{Before: before, After: after, Target: v, Applied: applied}, err
 		}
 
-		c = e.Version
+		after = e.Version
+		applied = append(applied, e.Version)
 	}
 
-	return c, nil
+	return Results{Before: before, After: after, Target: v, Applied: applied}, nil
 }
