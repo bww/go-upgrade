@@ -6,7 +6,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/bww/go-upgrade"
+	"github.com/bww/go-upgrade/v1"
 
 	"github.com/stretchr/testify/assert"
 )

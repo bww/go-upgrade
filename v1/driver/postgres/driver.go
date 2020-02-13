@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bww/go-upgrade"
+	"github.com/bww/go-upgrade/v1"
 
 	"github.com/lib/pq"
 )
