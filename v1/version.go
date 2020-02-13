@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,9 +12,8 @@ import (
 	"unicode"
 )
 
-const (
-	upgrade  = "up"
-	rollback = "down"
+var (
+	ErrInvalidSyntax = errors.New("Invalid syntax")
 )
 
 type Direction int
@@ -61,66 +61,55 @@ func versionsFromResourcesAtPath(p string) ([]*Version, error) {
 
 	for _, e := range infos {
 		n := e.Name()
-		if len(n) > 0 {
-			if n[0] == '.' {
-				continue // skip dot files
-			}
-			if !unicode.IsDigit(rune(n[0])) {
-				continue // skip files that don't begin with a digit
-			}
+		if n == "" || n[0] == '.' {
+			continue // skip dot files
 		}
 
-		x := strings.IndexAny(n, "_-")
-		if x < 0 {
-			return nil, fmt.Errorf("Upgrade resource has invalid form: [%v] (version)", e.Name())
-		}
-
-		v, err := strconv.Atoi(n[:x])
-		if err != nil {
-			return nil, fmt.Errorf("Upgrade resource has invalid form: invalid version number: [%v] %v", e.Name(), err)
+		v, d, err := parseName(n)
+		if err == ErrInvalidSyntax {
+			continue // not a migration file
+		} else if err != nil {
+			return nil, err
 		}
 		if v < 1 {
-			return nil, fmt.Errorf("Version cannot be less than one: [%v] %v", e.Name(), v)
+			return nil, fmt.Errorf("Version cannot be less than one: [%s] %v", n, v)
 		}
 
-		n = n[x+1:]
-
-		version, ok := versions[v]
+		ver, ok := versions[v]
 		if !ok {
-			version = &Version{Version: v}
-			versions[v] = version
+			ver = &Version{Version: v}
+			versions[v] = ver
 		}
 
 		f, err := os.Open(path.Join(p, e.Name()))
 		if err != nil {
-			return nil, fmt.Errorf("Could not open resource: [%v] %v", e.Name(), err)
+			return nil, fmt.Errorf("Could not open resource: [%v] %v", n, err)
 		}
-
 		data, err := ioutil.ReadAll(f)
 		if err != nil {
-			return nil, fmt.Errorf("Could not read resource: [%v] %v", e.Name(), err)
+			return nil, fmt.Errorf("Could not read resource: [%v] %v", n, err)
 		}
 
-		switch {
-		case strings.HasPrefix(n, upgrade):
-			if version.Upgrade != nil {
-				return nil, fmt.Errorf("Upgrade resource redefined for version %v: [%v]", version.Version, e.Name())
+		switch d {
+		case Upgrade:
+			if ver.Upgrade != nil {
+				return nil, fmt.Errorf("Upgrade resource redefined for version %v [%v]", ver.Version, n)
 			}
-			version.Upgrade = data
-		case strings.HasPrefix(n, rollback):
-			if version.Rollback != nil {
-				return nil, fmt.Errorf("Rollback resource redefined for version %v: [%v]", version.Version, e.Name())
+			ver.Upgrade = data
+		case Downgrade:
+			if ver.Rollback != nil {
+				return nil, fmt.Errorf("Rollback resource redefined for version %v [%v]", ver.Version, n)
 			}
-			version.Rollback = data
+			ver.Rollback = data
 		default:
-			return nil, fmt.Errorf("Upgrade resource has invalid form: invalid resource type [%v] %v", e.Name(), v)
+			return nil, fmt.Errorf("Upgrade resource has invalid form: invalid resource type [%v] %v", n, v)
 		}
 
 	}
 
 	i, out := 0, make([]*Version, len(versions))
 	for _, e := range versions {
-		if e.Upgrade == nil {
+		if e.Upgrade == nil { // we only require an upgrade resource
 			return nil, fmt.Errorf("Version %v is missing an upgrade resource", e.Version)
 		}
 		out[i] = e
@@ -129,4 +118,69 @@ func versionsFromResourcesAtPath(p string) ([]*Version, error) {
 
 	sort.Sort(byVersion(out))
 	return out, nil
+}
+
+func parseName(n string) (int, Direction, error) {
+	n, v, err := parseVersion(n)
+	if err == ErrInvalidSyntax {
+		return -1, Direction(-1), ErrInvalidSyntax
+	}
+
+	if len(n) < 1 {
+		return -1, Direction(-1), ErrInvalidSyntax
+	}
+	if !strings.ContainsRune("_-", rune(n[0])) {
+		return -1, Direction(-1), ErrInvalidSyntax
+	}
+	if n = n[1:]; len(n) < 1 {
+		return -1, Direction(-1), ErrInvalidSyntax
+	}
+
+	n, d, err := parseDirection(n)
+	if err != nil {
+		return -1, Direction(-1), ErrInvalidSyntax
+	}
+
+	return v, d, nil
+}
+
+func parseVersion(n string) (string, int, error) {
+	x, l := 0, len(n)
+	for i := 0; i < l; i++ {
+		if unicode.IsDigit(rune(n[i])) {
+			x++
+		} else {
+			break
+		}
+	}
+	if x < 1 {
+		return n, -1, ErrInvalidSyntax
+	}
+	v, err := strconv.Atoi(n[:x])
+	if err != nil {
+		return n, -1, err
+	}
+	return n[x:], v, nil
+}
+
+var dirnames = map[string]Direction{
+	"up":   Upgrade,
+	"dn":   Downgrade,
+	"down": Downgrade,
+}
+
+func parseDirection(n string) (string, Direction, error) {
+	x, l, m := 0, len(n), len("down") // "down" is the longest acceptable string
+	for i := 0; i < l && i < m; i++ {
+		if unicode.IsLetter(rune(n[i])) {
+			x++
+		} else {
+			break
+		}
+	}
+	d, ok := dirnames[strings.ToLower(n[:x])]
+	if !ok {
+		return n, Direction(-1), ErrInvalidSyntax
+	}
+	return n[x:], d, nil
 }
