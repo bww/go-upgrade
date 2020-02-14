@@ -45,7 +45,9 @@ func (s byVersion) Less(i, j int) bool {
 
 // Load upgrade resources from a directory. An upgrade resource has
 // a filename of the following form:
+//
 //  <version>_<up|down>[_<optional_description>]
+//
 func versionsFromResourcesAtPath(p string) ([]*Version, error) {
 	versions := make(map[int]*Version)
 
@@ -53,6 +55,7 @@ func versionsFromResourcesAtPath(p string) ([]*Version, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer dir.Close()
 
 	infos, err := dir.Readdir(0)
 	if err != nil {
@@ -85,7 +88,9 @@ func versionsFromResourcesAtPath(p string) ([]*Version, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Could not open resource: [%v] %v", n, err)
 		}
+
 		data, err := ioutil.ReadAll(f)
+		f.Close() // must close on either success or failure
 		if err != nil {
 			return nil, fmt.Errorf("Could not read resource: [%v] %v", n, err)
 		}
