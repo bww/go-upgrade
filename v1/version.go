@@ -3,13 +3,15 @@ package upgrade
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/bww/go-upgrade/v1/ioutil"
 )
 
 var (
@@ -25,23 +27,15 @@ const (
 
 type Version struct {
 	Version  int
-	Upgrade  []byte
-	Rollback []byte
+	Upgrade  io.ReadCloser
+	Rollback io.ReadCloser
 }
 
 type byVersion []*Version
 
-func (s byVersion) Len() int {
-	return len(s)
-}
-
-func (s byVersion) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s byVersion) Less(i, j int) bool {
-	return s[i].Version < s[j].Version
-}
+func (s byVersion) Len() int           { return len(s) }
+func (s byVersion) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s byVersion) Less(i, j int) bool { return s[i].Version < s[j].Version }
 
 // Load upgrade resources from a directory. An upgrade resource has
 // a filename of the following form:
@@ -84,28 +78,18 @@ func versionsFromResourcesAtPath(p string) ([]*Version, error) {
 			versions[v] = ver
 		}
 
-		f, err := os.Open(path.Join(p, e.Name()))
-		if err != nil {
-			return nil, fmt.Errorf("Could not open resource: [%v] %v", n, err)
-		}
-
-		data, err := ioutil.ReadAll(f)
-		f.Close() // must close on either success or failure
-		if err != nil {
-			return nil, fmt.Errorf("Could not read resource: [%v] %v", n, err)
-		}
-
+		file := ioutil.OpenLazy(path.Join(p, e.Name()))
 		switch d {
 		case Upgrade:
 			if ver.Upgrade != nil {
 				return nil, fmt.Errorf("Upgrade resource redefined for version %v [%v]", ver.Version, n)
 			}
-			ver.Upgrade = data
+			ver.Upgrade = file
 		case Downgrade:
 			if ver.Rollback != nil {
 				return nil, fmt.Errorf("Rollback resource redefined for version %v [%v]", ver.Version, n)
 			}
-			ver.Rollback = data
+			ver.Rollback = file
 		default:
 			return nil, fmt.Errorf("Upgrade resource has invalid form: invalid resource type [%v] %v", n, v)
 		}

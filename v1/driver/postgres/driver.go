@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 
 	"github.com/bww/go-upgrade/v1"
 
@@ -48,7 +50,7 @@ func (d *Driver) Version() (int, error) {
 }
 
 func (d *Driver) Upgrade(v upgrade.Version) error {
-	return d.migrateVersion(versionTable, string(v.Upgrade), v.Version, upgrade.Upgrade)
+	return d.migrateVersion(versionTable, v.Upgrade, v.Version, upgrade.Upgrade)
 }
 
 func (d *Driver) createVersionTableIfNecessary(t string) error {
@@ -70,7 +72,13 @@ func (d *Driver) databaseVersion(t string) (int, error) {
 	return version, nil
 }
 
-func (d *Driver) migrateVersion(t, s string, v int, dir upgrade.Direction) error {
+func (d *Driver) migrateVersion(t string, src io.ReadCloser, v int, dir upgrade.Direction) error {
+	defer src.Close()
+
+	sql, err := ioutil.ReadAll(src)
+	if err != nil {
+		return err
+	}
 
 	tx, err := d.Begin()
 	if err != nil {
@@ -86,7 +94,7 @@ func (d *Driver) migrateVersion(t, s string, v int, dir upgrade.Direction) error
 		}
 	}()
 
-	_, err = tx.Exec(s)
+	_, err = tx.Exec(string(sql))
 	if err != nil {
 		perr, ok := err.(*pq.Error)
 		if ok {
