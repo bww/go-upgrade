@@ -6,7 +6,7 @@ import (
 
 type LazyFile struct {
 	path string
-	file os.File
+	file *os.File
 }
 
 func OpenLazy(p string) *LazyFile {

@@ -2,12 +2,23 @@ package upgrade
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func mustReadAll(f io.ReadCloser) []byte {
+	defer f.Close()
+	d, err := ioutil.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+	return d
+}
 
 type testDriver struct {
 	version int
@@ -28,16 +39,16 @@ func TestValidVersions(t *testing.T) {
 	assert.Len(t, u.versions, 3)
 
 	assert.Equal(t, 1, u.versions[0].Version)
-	assert.Equal(t, []byte("1. Up"), u.versions[0].Upgrade)
-	assert.Equal(t, []byte("1. Down"), u.versions[0].Rollback)
+	assert.Equal(t, []byte("1. Up"), mustReadAll(u.versions[0].Upgrade))
+	assert.Equal(t, []byte("1. Down"), mustReadAll(u.versions[0].Rollback))
 
 	assert.Equal(t, 2, u.versions[1].Version)
-	assert.Equal(t, []byte("2. Up"), u.versions[1].Upgrade)
-	assert.Equal(t, []byte("2. Down"), u.versions[1].Rollback)
+	assert.Equal(t, []byte("2. Up"), mustReadAll(u.versions[1].Upgrade))
+	assert.Equal(t, []byte("2. Down"), mustReadAll(u.versions[1].Rollback))
 
 	assert.Equal(t, 4, u.versions[2].Version) // this is weird, but valid; versions can be sparse
-	assert.Equal(t, []byte("4. Up"), u.versions[2].Upgrade)
-	assert.Equal(t, []byte("4. Down"), u.versions[2].Rollback)
+	assert.Equal(t, []byte("4. Up"), mustReadAll(u.versions[2].Upgrade))
+	assert.Equal(t, []byte("4. Down"), mustReadAll(u.versions[2].Rollback))
 }
 
 func TestMalformedVersions(t *testing.T) {
