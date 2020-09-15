@@ -14,8 +14,8 @@ func OpenLazy(p string) *LazyFile {
 }
 
 func (f *LazyFile) Read(p []byte) (int, error) {
-	var err error
 	if f.file == nil {
+		var err error
 		f.file, err = os.Open(f.path)
 		if err != nil {
 			return 0, err
