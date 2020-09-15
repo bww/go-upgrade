@@ -53,9 +53,14 @@ func TestValidVersions(t *testing.T) {
 
 func TestMalformedVersions(t *testing.T) {
 	_, err := New(Config{Resources: path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "versions/002")})
-	if !assert.NotNil(t, err, fmt.Sprintf("%v", err)) {
-		return
-	}
+	fmt.Println("-->", err)
+	assert.NotNil(t, err, fmt.Sprintf("%v", err))
+}
+
+func TestConflictVersions(t *testing.T) {
+	_, err := New(Config{Resources: path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "versions/003")})
+	fmt.Println("-->", err)
+	assert.NotNil(t, err, fmt.Sprintf("%v", err))
 }
 
 func TestUpgrade(t *testing.T) {
