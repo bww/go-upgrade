@@ -1,4 +1,4 @@
-package postgres
+package sqlite3
 
 import (
 	"fmt"
@@ -12,23 +12,25 @@ import (
 )
 
 const (
-	testDatabase = "go_upgrade_tests"
-	testURL      = "postgres://postgres@localhost:5432/template1?sslmode=disable"
+	testDB = "upgrade_sqlite3.db"
 )
 
 func TestUpgrade(t *testing.T) {
+	dbpath := path.Join(os.TempDir(), testDB)
+	fmt.Println("-->", dbpath)
+	os.Remove(dbpath)
 
 	t.Run("a", func(t *testing.T) {
 		var r upgrade.Results
 		var err error
 		var n int
 
-		err = CreateDatabase(testURL, testDatabase)
+		d, err := New(dbpath)
 		assert.Nil(t, err, fmt.Sprintf("%v", err))
-
-		d, err := New(fmt.Sprintf("postgres://postgres@localhost:5432/%s?sslmode=disable", testDatabase))
-		assert.Nil(t, err, fmt.Sprintf("%v", err))
-		defer d.Close()
+		defer func() {
+			d.Close()
+			os.Remove(dbpath)
+		}()
 
 		u, err := upgrade.New(upgrade.Config{Resources: path.Join(os.Getenv("GO_UPGRADE_TEST_RESOURCES"), "generic/001"), Driver: d})
 		assert.Nil(t, err, fmt.Sprintf("%v", err))
@@ -56,6 +58,4 @@ func TestUpgrade(t *testing.T) {
 
 	})
 
-	err := DropDatabase(testURL, testDatabase)
-	assert.Nil(t, err, fmt.Sprintf("%v", err))
 }

@@ -8,9 +8,10 @@ import (
 )
 
 var (
-	ErrNoVersions = errors.New("No versions")
-	ErrNoDriver   = errors.New("No driver")
-	ErrNoChange   = errors.New("No change")
+	ErrNoVersions       = errors.New("No versions")
+	ErrNoDriver         = errors.New("No driver")
+	ErrNoChange         = errors.New("No change")
+	ErrInvalidDirection = errors.New("Invalid direction")
 )
 
 type Results struct {

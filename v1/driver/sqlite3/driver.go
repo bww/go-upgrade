@@ -1,4 +1,4 @@
-package postgres
+package sqlite3
 
 import (
 	"database/sql"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/bww/go-upgrade/v1"
 
-	"github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const versionTable = "schema_version"
@@ -18,7 +18,7 @@ type Driver struct {
 }
 
 func New(u string) (*Driver, error) {
-	db, err := sql.Open("postgres", u)
+	db, err := sql.Open("sqlite3", u)
 	if err != nil {
 		return nil, err
 	}
@@ -86,19 +86,14 @@ func (d *Driver) migrateVersion(t string, src io.ReadCloser, v int, dir upgrade.
 		if tx != nil {
 			err := tx.Rollback()
 			if err != nil {
-				fmt.Printf("upgrade: postgres: Could not rollback failed transaction: %v", err)
+				fmt.Printf("upgrade: sqlite: Could not rollback failed transaction: %v", err)
 			}
 		}
 	}()
 
 	_, err = tx.Exec(string(sql))
 	if err != nil {
-		perr, ok := err.(*pq.Error)
-		if ok {
-			return fmt.Errorf("%s %v: %s\n\t%s", perr.Severity, perr.Code, perr.Message, perr.Detail)
-		} else {
-			return err
-		}
+		return err
 	}
 
 	switch dir {
@@ -121,57 +116,6 @@ func (d *Driver) migrateVersion(t string, src io.ReadCloser, v int, dir upgrade.
 		return err
 	}
 	tx = nil
-
-	return nil
-}
-
-func CreateDatabase(u, n string) error {
-
-	db, err := sql.Open("postgres", u)
-	if err != nil {
-		return err
-	}
-
-	defer db.Close()
-	err = db.Ping()
-	if err != nil {
-		return err
-	}
-
-	var exists int
-	err = db.QueryRow(fmt.Sprintf("SELECT 1 FROM pg_database WHERE datname = '%s'", n)).Scan(&exists)
-	if err != nil && err != sql.ErrNoRows {
-		return err
-	}
-	if exists == 1 {
-		return nil // ok
-	}
-
-	_, err = db.Exec(fmt.Sprintf(`CREATE DATABASE "%s"`, n))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func DropDatabase(u, n string) error {
-
-	db, err := sql.Open("postgres", u)
-	if err != nil {
-		return err
-	}
-
-	defer db.Close()
-	err = db.Ping()
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(fmt.Sprintf(`DROP DATABASE IF EXISTS "%s"`, n))
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
