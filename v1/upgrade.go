@@ -21,7 +21,7 @@ type Results struct {
 
 func (r Results) String() string {
 	b := &strings.Builder{}
-	b.WriteString(fmt.Sprintf("Upgraded to %d (%d → %d) applied ", r.Target, r.Before, r.After))
+	b.WriteString(fmt.Sprintf("Upgrading to %d (%d → %d) applied ", r.Target, r.Before, r.After))
 	if len(r.Applied) > 0 {
 		b.WriteString("[")
 		for i, e := range r.Applied {
