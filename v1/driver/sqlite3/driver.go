@@ -7,28 +7,12 @@ import (
 	"io/ioutil"
 
 	"github.com/bww/go-upgrade/v1"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const versionTable = "schema_version"
 
 type Driver struct {
 	*sql.DB
-}
-
-func New(u string) (*Driver, error) {
-	db, err := sql.Open("sqlite3", u)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-
-	return NewWithDB(db)
 }
 
 func NewWithDB(db *sql.DB) (*Driver, error) {

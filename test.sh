@@ -11,7 +11,7 @@ me_home=$(cd "$me_home" && pwd)
 DLV="dlv"
 
 # parse arguments
-args=$(getopt dcv $*)
+args=$(getopt dcvS $*)
 set -- $args
 for i; do
   case "$i"
@@ -24,6 +24,9 @@ for i; do
       shift;;
     -v)
       other_flags="$other_flags -v";
+      shift;;
+    -S)
+      other_flags="$other_flags -tags sqlite";
       shift;;
     --)
       shift; break;;
