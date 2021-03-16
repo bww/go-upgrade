@@ -26,7 +26,7 @@ for i; do
       other_flags="$other_flags -v";
       shift;;
     -S)
-      other_flags="$other_flags -tags sqlite";
+      other_flags="$other_flags -tags sqlite3";
       shift;;
     --)
       shift; break;;

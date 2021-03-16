@@ -1,4 +1,4 @@
-//+build !sqlite
+//+build !sqlite3
 
 package sqlite3
 
